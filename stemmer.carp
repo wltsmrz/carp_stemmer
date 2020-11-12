@@ -1,0 +1,257 @@
+(Project.config "title" "stemmer") 
+(Project.config "cflag" "-I.") 
+
+(load "https://veitheller.de/git/carpentry/inline-c@0.0.3")
+
+(inline-c "
+String String_replace_from_(String* s, int n, String* s2) {
+  int first_len = strlen(*s);
+  int first_sub_len;
+
+  if (n < 0) {
+    first_sub_len = first_len + n;
+  } else {
+    first_sub_len = n;
+  }
+
+  if (first_sub_len < 1 || first_sub_len > first_len) {
+    return String_copy(s);
+  }
+
+  int len = first_sub_len + strlen(*s2) + 1;
+  String res = (String)CARP_MALLOC(len);
+  memset(res, '\0', len);
+  strncpy(res, *s, first_sub_len);
+  strcat(res, *s2);
+
+  return res;
+}
+
+String String_trim_from_(String* s, int n) {
+  String r = String_empty();
+  String res = String_replace_from_(s, n, &r);
+  CARP_FREE(r);
+  return res;
+}
+")
+
+(register replace-from (Fn [&String Int &String] String) "String_replace_from_")
+(register trim-from (Fn [&String Int] String) "String_trim_from_")
+
+(defn consonant? [x i]
+  (let [char (String.char-at x i)]
+    (case char
+      \a false
+      \e false
+      \i false
+      \o false
+      \u false
+      \y (or (= i 0) (consonant? x (- i 1)))
+      true)))
+
+(defn cv-form [x]
+  (let-do [form [] prev \X]
+    (for [i 0 (String.length x)]
+      (do (cond (consonant? x i)
+        (when (or (= prev \X) (= prev \V))
+            (Array.push-back! &form \C))
+        (when (or (= prev \X) (= prev \C))
+            (Array.push-back! &form \V)))
+        (set! prev (Array.unsafe-last &form))))
+    form))
+
+(defn m [x]
+  (let-do [n 0 form (cv-form x)]
+    (for [i 0 (Int.dec (Array.length &form))]
+        (when (and
+          (= \C @(Array.unsafe-nth &form i))
+          (= \V @(Array.unsafe-nth &form (Int.inc i))))
+            (set! n (Int.inc n))))
+  n))
+
+(defn m0 [x r] (and (String.ends-with? x r) (> (m x) 0)))
+
+(defn m1 [x r] (and (String.ends-with? x r) (> (m x) 1)))
+
+(defn contains-vowel? [x] 
+  (let-do [res false]
+    (for [i 0 (String.length x)]
+      (when (not (consonant? x i))
+        (do (set! res true) (break))))
+    res))
+
+(defn contains-vowel? [x] 
+  (let-do [res false]
+    (for [i 0 (String.length x)]
+      (when (not (consonant? x i))
+        (do (set! res true) (break))))
+    res))
+
+(defn double-consonant? [x] 
+  (let [j (Int.dec (String.length x))]
+    (cond
+      (< j 1) false
+      (not (= (String.char-at x j) (String.char-at x (Int.dec j)))) false
+      (consonant? x j))))
+
+(defn cvc? [x] 
+  (let [j (Int.dec (String.length x))]
+    (cond
+      (< j 2) false
+      (and (consonant? x j) (and
+       (not (consonant? x (- j 1))) (consonant? x (- j 2))))
+        (let [char (String.char-at x j)] (case char
+          \w false
+          \x false
+          \y false
+          true
+      )) false)))
+
+(defn step-1a [x]
+  (cond
+    (not (String.ends-with? &x "s")) x
+    (String.ends-with? &x "sses") (replace-from &x -4 "ss")
+    (String.ends-with? &x "ies") (replace-from &x -3 "i")
+    (not (= \s (String.char-at &x (- (String.length &x) 2))))
+      (trim-from &x -1)
+    x))
+
+(defn step-1bi [x]
+  (cond
+    (or (String.ends-with? &x "at") (or (String.ends-with? &x "bl")
+(String.ends-with? &x "iz")))
+      (replace-from &x 0 "e")
+    (and
+      (double-consonant? &x)
+      (and (not (String.ends-with? &x "l"))
+      (and (not (String.ends-with? &x "s"))
+      (not (String.ends-with? &x "z")))))
+        (trim-from &x -1)
+    (and (= (m &x) 1) (cvc? &x))
+        (replace-from &x 0 "e")
+    x))
+
+(defn step-1b [x]
+ (cond (and (String.ends-with? &x "eed") (> (m &x) 0)) (trim-from &x -1)
+  (let [v (contains-vowel? &x)]
+    (cond
+      (and v (String.ends-with? &x "ed")) (step-1bi (trim-from &x -2))
+      (and v (String.ends-with? &x "ing")) (step-1bi (trim-from &x -3))
+      x))))
+
+(defn step-1c [x]
+ (cond
+  (and (String.ends-with? &x "y") (contains-vowel? &x)) (replace-from &x -1 "i")
+  x))
+
+(defn step-2 [x]
+    (case (String.char-at &x (- (String.length &x) 2))
+      \a (cond (m0 &x "ational") (replace-from &x -7 "ate")
+               (m0 &x "tional") (replace-from &x -6 "tion")
+          x)
+      \c (cond (m0 &x "enci") (replace-from &x -4 "ence")
+               (m0 &x "anci") (replace-from &x -4 "ance")
+          x)
+      \e (cond (m0 &x "izer") (replace-from &x -4 "ize")
+          x)
+      \l (cond (m0 &x "bli") (replace-from &x -3 "ble")
+               (m0 &x "alli") (replace-from &x -4 "al")
+               (m0 &x "entli") (replace-from &x -5 "ent")
+               (m0 &x "eli") (replace-from &x -3 "e")
+               (m0 &x "ousli") (replace-from &x -5 "ous")
+          x)
+      \o (cond (m0 &x "ization") (replace-from &x -7 "ize")
+               (m0 &x "ation") (replace-from &x -5 "ate")
+               (m0 &x "ator") (replace-from &x -4 "ate")
+          x)
+      \s (cond (m0 &x "alism") (replace-from &x -5 "al")
+               (m0 &x "iveness") (replace-from &x -7 "ive")
+               (m0 &x "fulness") (replace-from &x -7 "ful")
+               (m0 &x "ousness") (replace-from &x -7 "ous")
+          x)
+      \t (cond (m0 &x "aliti") (replace-from &x -5 "al")
+               (m0 &x "iviti") (replace-from &x -5 "ive")
+               (m0 &x "biliti") (replace-from &x -6 "ble")
+          x)
+      \g (cond (m0 &x "logi") (replace-from &x -4 "log")
+          x)
+  x))
+
+(defn step-3 [x]
+    (case (String.char-at &x (- (String.length &x) 1))
+      \e (cond (m0 &x "icate") (replace-from &x -5 "ic")
+               (m0 &x "ative") (replace-from &x -5 "")
+               (m0 &x "alize") (replace-from &x -5 "al")
+          x)
+      \i (cond (m0 &x "iciti") (replace-from &x -5 "ic")
+          x)
+      \l (cond (m0 &x "ical") (replace-from &x -4 "ic")
+               (m0 &x "ful") (replace-from &x -3 "")
+          x)
+      \s (cond (m0 &x "ness") (replace-from &x -4 "")
+          x)
+  x))
+
+(defn step-4 [x]
+    (case (String.char-at &x (- (String.length &x) 2))
+      \a (cond (m1 &x "al") (trim-from &x -2)
+          x)
+      \c (cond (m1 &x "ance") (trim-from &x -2)
+               (m1 &x "ence") (trim-from &x -4)
+          x)
+      \i (cond (m1 &x "ic") (trim-from &x -2)
+          x)
+      \l (cond (m1 &x "able") (trim-from &x -4)
+               (m1 &x "ible") (trim-from &x -4)
+          x)
+      \n (cond (m1 &x "ant") (trim-from &x -3)
+               (m1 &x "ement") (trim-from &x -5)
+               (m1 &x "ment") (trim-from &x -4)
+               (m1 &x "ent") (trim-from &x -3)
+          x)
+      \o (cond (and (m1 &x "ion")
+                (or
+                  (= \s (String.char-at &x (Int.dec (String.length &x))))
+                  (= \t (String.char-at &x (Int.dec (String.length &x))))))
+          (trim-from &x -3)
+          x)
+      \s (cond (m1 &x "ism") (trim-from &x -3)
+          x)
+      \t (cond (m1 &x "ate") (trim-from &x -3)
+               (m1 &x "iti") (trim-from &x -3)
+          x)
+      \u (cond (m1 &x "ous") (trim-from &x -3)
+          x)
+      \v (cond (m1 &x "ive") (trim-from &x -3)
+          x)
+      \z (cond (m1 &x "ize") (trim-from &x -3)
+          x)
+  x))
+
+(defn step-5a [x]
+  (cond (String.ends-with? &x "e")
+    (let [mn (m &x)]
+      (cond
+        (or (> mn 1) (and (= mn 1) (not (cvc? &(trim-from &x -1)))))
+          (trim-from &x -1)
+          x))
+    x))
+
+(defn step-5b [x]
+  (cond (and (String.ends-with? &x "l") (and (> (m &x) 1) (double-consonant? &x)))
+   (trim-from &x -1)
+   x))
+
+(defn stem [x]
+  (cond (< (String.length &x) 3)
+    x
+    (=> x
+      (step-1a)
+      (step-1b)
+      (step-1c)
+      (step-2)
+      (step-3)
+      (step-4)
+      (step-5a)
+      (step-5b))))
+
