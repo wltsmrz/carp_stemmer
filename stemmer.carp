@@ -1,4 +1,4 @@
-(Project.config "title" "stemmer") 
+(Project.config "title" "program") 
 (Project.config "cflag" "-I.") 
 
 (load "https://veitheller.de/git/carpentry/inline-c@0.0.3")
@@ -36,6 +36,7 @@ String String_trim_from_(String* s, int n) {
 ")
 
 (register replace-from (Fn [&String Int &String] String) "String_replace_from_")
+
 (register trim-from (Fn [&String Int] String) "String_trim_from_")
 
 (defn consonant? [x i]
@@ -72,13 +73,6 @@ String String_trim_from_(String* s, int n) {
 (defn m0 [x r] (and (String.ends-with? x r) (> (m x) 0)))
 
 (defn m1 [x r] (and (String.ends-with? x r) (> (m x) 1)))
-
-(defn contains-vowel? [x] 
-  (let-do [res false]
-    (for [i 0 (String.length x)]
-      (when (not (consonant? x i))
-        (do (set! res true) (break))))
-    res))
 
 (defn contains-vowel? [x] 
   (let-do [res false]
@@ -255,3 +249,12 @@ String String_trim_from_(String* s, int n) {
       (step-5a)
       (step-5b))))
 
+(defn cv-form-cstr [x]
+  (let [xx (String.from-cstr x)]
+    (String.cstr &(String.from-chars &(cv-form &xx)))))
+
+(defn stem-cstr [x]
+  (let [xx (String.from-cstr x)]
+    (String.cstr &(stem xx))))
+  
+(defn-do main [] 0)
