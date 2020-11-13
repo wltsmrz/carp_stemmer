@@ -1,11 +1,10 @@
 
-Porter stemmer interpretation in carp
+Porter stemmer interpretation in carp, compiled to webassembly via emscripten
 
-Compiled to webassembly via emscripten:
+Build requirements:
 
-```
-emcc main.c -O3 -g0 -I/home/w/carp/Carp/core -I.. -s ALLOW_MEMORY_GROWTH=1 \
--s EXPORTED_FUNCTIONS='["_malloc","_free","_stem_MINUS_cstr"]' \
--s EXTRA_EXPORTED_RUNTIME_METHODS='["cwrap","stringToUTF8","lengthBytesUTF8","UTF8ToString"]'
-```
+* [carp](https://github.com/carp-lang/Carp)
+* [emcc](https://emscripten.org/docs/getting_started/downloads.html)
+
+
 
