@@ -1,55 +1,12 @@
-(Project.config "title" "program") 
-(Project.config "cflag" "-I.") 
+(Project.config "title" "stemmer")
+(Project.config "generate-only" true)
 
 (use String)
 (use Array)
 
-(load "https://veitheller.de/git/carpentry/inline-c@0.0.3")
-
-(inline-c "
-String String_replace_from_(const String* s, int n, String* s2) {
-  int first_len = strlen(*s);
-  int first_sub_len;
-
-  if (n < 0) {
-    first_sub_len = first_len + n;
-  } else {
-    first_sub_len = n;
-  }
-
-  if (first_sub_len < 1 || first_sub_len >= first_len) {
-    return String_copy(s2);
-  }
-
-  int len = first_sub_len + strlen(*s2) + 1;
-  String res = (String)CARP_MALLOC(len);
-  memset(res, '\0', len);
-
-  strncpy(res, *s, first_sub_len);
-  strcat(res, *s2);
-
-  return res;
-}
-
-String String_trim_from_(const String* s, int n) {
-  String r = String_empty();
-  String res = String_replace_from_(s, n, &r);
-  CARP_FREE(r);
-  return res;
-}
-
-String String_to_lower_(const String* p) {
-  String r = String_copy(p);
-  int i = strlen(r);
-  while (i--) *(r + i) = tolower(*(r + i));
-  return r;
-}
-")
-
+(relative-include "string_add.h")
 (register replace-from (Fn [&String Int &String] String) "String_replace_from_")
-
 (register trim-from (Fn [&String Int] String) "String_trim_from_")
-
 (register to-lower (Fn [&String] String) "String_to_lower_")
 
 (defn consonant? [x i]
@@ -123,7 +80,7 @@ String String_to_lower_(const String* p) {
       (ends-with? &x "at")
       (ends-with? &x "bl")
       (ends-with? &x "iz"))
-        (replace-from &x 0 "e")
+        (append &x "e")
     (and*
       (double-consonant? &x)
       (not (ends-with? &x "l"))
@@ -131,7 +88,7 @@ String String_to_lower_(const String* p) {
       (not (ends-with? &x "z")))
         (trim-from &x -1)
     (and (= (m &x) 1) (cvc? &x))
-      (replace-from &x 0 "e")
+      (append &x "e")
   x))
 
 (defn step-1b [x]
@@ -253,7 +210,6 @@ String String_to_lower_(const String* p) {
         (trim-from &x -1)
   x))
 
-
 (defn stem [x]
   (let [xx (to-lower &x)]
   (cond (< (length &xx) 3)
@@ -269,12 +225,7 @@ String String_to_lower_(const String* p) {
       ;(step-5b)
 ))))
 
-(defn stem-cstr [x]
-  (let [xx (from-cstr x)]
-    (cstr &(stem xx))))
+(defn stem-cstr [x] (cstr &(stem (from-cstr x))))
   
-(defn-do main []
-  (IO.println &(stem @"vileness"))
-0)
-
+(defn-do main [] (IO.println &(stem @"vileness")) 0)
 

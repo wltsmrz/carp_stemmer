@@ -1,4 +1,4 @@
-const Module = require('./a.out.js')
+const Module = require('./stemmer.js')
 const stem = Module.cwrap('stem_MINUS_cstr', 'number', [ 'number' ])
 
 const api = {
