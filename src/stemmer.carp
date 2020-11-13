@@ -1,5 +1,4 @@
 (Project.config "title" "stemmer")
-(Project.config "generate-only" true)
 
 (use String)
 (use Array)
