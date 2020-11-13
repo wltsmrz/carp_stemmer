@@ -224,5 +224,3 @@
 
 (defn stem-cstr [x] (cstr &(stem (from-cstr x))))
   
-(defn-do main [] (IO.println &(stem @"vileness")) 0)
-
