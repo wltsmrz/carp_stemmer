@@ -46,21 +46,21 @@
 
 (defn m1 [x n] (> (m x n) 1))
 
-(defn contains-vowel-from? [x j] 
+(defn contains-vowel-from? [x j]
   (let-do [res false]
     (for [i 0 (+ (length x) j)]
       (when (not (consonant? x i))
         (do (set! res true) (break))))
     res))
 
-(defn ends-with-cc? [x] 
+(defn ends-with-cc? [x]
   (let [j (Int.dec (length x))]
     (and*
       (>= j 1)
       (= (char-at x j) (char-at x (Int.dec j)))
       (consonant? x j))))
 
-(defn cvc? [x] 
+(defn cvc? [x]
   (let [j (Int.dec (String.length x))]
     (and*
       (>= j 2)
