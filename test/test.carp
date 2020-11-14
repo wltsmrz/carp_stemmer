@@ -1,0 +1,21 @@
+(Project.config "title" "stemmer-test")
+(load "../index.carp")
+
+(defn test [a b]
+  (let [v (stem @&a)]
+  (when (not (= &v &b))
+   (IO.println &(String.concat
+      &[ @"FAIL {" a, @"} expected {", b, @"} and received {", v @"}" ])))))
+
+(defn run-test-line [l]
+ (let [ar (String.split-by l &[\|])]
+  (test @(Array.unsafe-nth &ar 0) @(Array.unsafe-nth &ar 1))))
+
+(defn next-line []
+  (String.chomp &(IO.get-line)))
+
+(defn-do main []
+  (let [l (next-line)]
+    (while-do (not (String.empty? &l))
+      (run-test-line &l)
+      (set! l (next-line)))))
