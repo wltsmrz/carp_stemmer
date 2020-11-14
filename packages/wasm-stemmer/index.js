@@ -12,7 +12,6 @@ async function stem(str) {
   Module.stringToUTF8(str, inPtr, byteLen)
   const outPtr = stemWrap(inPtr)
   const res = Module.UTF8ToString(outPtr)
-  Module._free(outPtr)
   Module._free(inPtr)
 
   return res
