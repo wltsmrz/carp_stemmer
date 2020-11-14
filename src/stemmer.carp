@@ -220,7 +220,7 @@
   x))
 
 (defn stem [x]
-  (let [xx (to-lower &x)]
+  (let [xx (to-lower x)]
   (cond (< (length &xx) 3)
     xx
     (=> xx
@@ -234,5 +234,5 @@
       (step-5b)
 ))))
 
-(defn stem-cstr [x] (cstr &(stem (from-cstr x))))
+(defn stem-cstr [x] (cstr &(stem &(from-cstr x))))
 
