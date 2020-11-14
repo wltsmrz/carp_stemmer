@@ -1,5 +1,5 @@
 const Module = require('./stemmer.js')
-const stemWrap = Module.cwrap('stem_MINUS_cstr', 'number', [ 'number' ])
+const stemWrap = Module.cwrap('PorterStemmer_stem_MINUS_cstr', 'number', [ 'number' ])
 
 const initPromise = new Promise((resolve, reject) =>
   Module.onRuntimeInitialized = () => resolve())
