@@ -2,7 +2,7 @@
 (load "../main.carp")
 
 (defn test [a b]
-  (let [v (PorterStemmer.stem &a)]
+  (let [v (Stemmer.stem &a)]
   (when (not (= &v &b))
    (IO.println &(String.concat
       &[ @"FAIL {" a, @"} expected {", b, @"} and received {", v @"}" ])))))

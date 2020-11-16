@@ -1,10 +1,11 @@
 # carp_stemmer
 
-Fully compliant [Porter stemmer](https://tartarus.org/martin/PorterStemmer/) in carp
+[Porter stemmer](https://tartarus.org/martin/PorterStemmer/) in Carp. Tested
+against 23531-word list from official site.
 
 ```clojure
-(load "https://github.com/wltsmrz/carp_stemmer@v0.2.0")
+(load "https://github.com/wltsmrz/carp_stemmer@v0.3.0")
 
 (defn main []
-  (IO.println &(PorterStemmer.stem "greetings")))
+  (IO.println &(Stemmer.stem "greetings")))
 ```
