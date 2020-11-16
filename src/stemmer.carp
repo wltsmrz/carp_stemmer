@@ -1,8 +1,8 @@
 
 (defmodule PorterStemmer
   (relative-include "string_add.h")
-  (register to-lower (Fn [&String] String) "String_to_lower_")
   (register utf8-length (Fn [&String] Int) "String_utf8len_")
+  (register to-lower (Fn [&String] String) "String_to_lower_")
 
   (defn trim-from [x j]
      (String.slice x 0 (+ (utf8-length x) j)))
@@ -219,10 +219,10 @@
     x))
 
   (defn stem [x]
-    (let [xx (to-lower x)]
-    (cond (< (String.length &xx) 3)
-      xx
-      (=> xx
+    (cond (< (String.length x) 3)
+      @x
+      (=> x
+        (to-lower)
         (step-1a)
         (step-1b)
         (step-1c)
@@ -231,7 +231,7 @@
         (step-4)
         (step-5a)
         (step-5b)
-  ))))
+  )))
 
   (defn stem-cstr [x]
     (cstr &(stem &(String.from-cstr x))))
