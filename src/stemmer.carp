@@ -5,7 +5,7 @@
   (register to-lower (Fn [&String] String) "String_to_lower_")
 
   (defn trim-from [x j]
-     (String.slice x 0 (+ (utf8-length x) j)))
+     (String.slice x 0 (+ (String.length x) j)))
 
   (defn replace-from [x j r]
     (String.append &(trim-from x j) r))
@@ -219,7 +219,7 @@
     x))
 
   (defn stem [x]
-    (cond (< (String.length x) 3)
+    (cond (or (< (String.length x) 3) (not (= (String.length x) (utf8-length x))))
       @x
       (=> x
         (to-lower)
@@ -234,5 +234,5 @@
   )))
 
   (defn stem-cstr [x]
-    (cstr &(stem &(String.from-cstr x))))
+    (String.cstr &(stem &(String.from-cstr x))))
 )

@@ -9,4 +9,3 @@ String String_to_lower_(const String* p) {
   while (i--) *(r + i) = tolower(*(r + i));
   return r;
 }
-
