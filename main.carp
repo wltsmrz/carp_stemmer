@@ -11,35 +11,35 @@
     (String.append &(trim-from x j) r))
 
   (defn consonant? [x i]
-    (let [char (String.char-at x i)]
-      (case char
-        \a false
-        \e false
-        \i false
-        \o false
-        \u false
-        \y (or (= i 0) (not (consonant? x (Int.dec i))))
-        true)))
+    (case (String.char-at x i)
+      \a false
+      \e false
+      \i false
+      \o false
+      \u false
+      \y (or (= i 0) (not (consonant? x (Int.dec i))))
+      true))
 
-  (defn cv-form [x j]
-    (let-do [form [] prev \X]
-      (for [i 0 (+ (String.length x) j)]
-        (do (cond (consonant? x i)
-          (when (or (= prev \X) (= prev \V))
-              (Array.push-back! &form \C))
-          (when (or (= prev \X) (= prev \C))
-              (Array.push-back! &form \V)))
-          (set! prev (Array.unsafe-last &form))))
-      form))
+ (defn cv-form [x j]
+   (let-do [form [] prev \X]
+     (for [i 0 (+ (String.length x) j)]
+       (do (cond (consonant? x i)
+         (when (or (= prev \X) (= prev \V))
+             (Array.push-back! &form \C))
+         (when (or (= prev \X) (= prev \C))
+             (Array.push-back! &form \V)))
+         (set! prev (Array.unsafe-last &form))))
+     form))
 
   (defn m [x j]
-    (let-do [n 0 form (cv-form x j)]
-      (for [i 0 (Int.dec (Array.length &form))]
-          (when (and
-            (= \V @(Array.unsafe-nth &form i))
-            (= \C @(Array.unsafe-nth &form (Int.inc i))))
-              (set! n (Int.inc n))))
-      n))
+    (let-do [n 0 prev \X]
+      (for [i 0 (+ (String.length x) j)]
+        (cond (consonant? x i)
+          (do
+            (when (= prev \V) (set! n (Int.inc n)))
+            (set! prev \C))
+          (set! prev \V)
+        )) n))
 
   (defn m0 [x n] (> (m x n) 0))
 
@@ -65,11 +65,10 @@
         (>= j 2)
         (consonant? x j)
         (not (consonant? x (- j 1)))
-        (and (consonant? x (- j 2))
-          (and*
-              (not (= \w (String.char-at x j)))
-              (not (= \x (String.char-at x j)))
-              (not (= \y (String.char-at x j))))))))
+        (consonant? x (- j 2))
+        (not (= \w (String.char-at x j)))
+        (not (= \x (String.char-at x j)))
+        (not (= \y (String.char-at x j))))))
 
   (defn step-1a [x]
     (cond
@@ -236,3 +235,4 @@
   (defn stem-cstr [x]
     (String.cstr &(stem &(String.from-cstr x))))
 )
+
