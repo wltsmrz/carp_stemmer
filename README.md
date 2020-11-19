@@ -4,7 +4,7 @@
 against 23531-word list from official site.
 
 ```clojure
-(load "https://github.com/wltsmrz/carp_stemmer@v0.3.0")
+(load "https://github.com/wltsmrz/carp_stemmer@v0.3.1")
 
 (defn main []
   (IO.println &(Stemmer.stem "greetings")))

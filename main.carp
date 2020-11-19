@@ -1,6 +1,6 @@
+(relative-include "src/string_extras.h")
 
 (defmodule Stemmer
-  (relative-include "src/string_extras.h")
   (register utf8-length (Fn [&String] Int) "String_utf8len_")
   (register to-lower (Fn [&String] String) "String_to_lower_")
 
