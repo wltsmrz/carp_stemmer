@@ -1,17 +1,26 @@
 (relative-include "src/string_extras.h")
 
 (defmodule Stemmer
+  (hidden utf8-length)
+  (private utf8-length)
   (register utf8-length (Fn [&String] Int) "String_utf8len_")
+
+  (hidden to-lower)
+  (private to-lower)
   (register to-lower (Fn [&String] String) "String_to_lower_")
 
+  (hidden trim-from)
+  (private trim-from)
   (defn trim-from [x j]
      (String.slice x 0 (+ (String.length x) j)))
 
+  (hidden replace-from)
+  (private replace-from)
   (defn replace-from [x j r]
     (String.append &(trim-from x j) r))
 
   (defn consonant? [x i]
-    (case (String.char-at x i)
+    (case (String.char-at x (the Int i))
       \a false
       \e false
       \i false
@@ -20,17 +29,8 @@
       \y (or (= i 0) (not (consonant? x (Int.dec i))))
       true))
 
- (defn cv-form [x j]
-   (let-do [form [] prev \X]
-     (for [i 0 (+ (String.length x) j)]
-       (do (cond (consonant? x i)
-         (when (or (= prev \X) (= prev \V))
-             (Array.push-back! &form \C))
-         (when (or (= prev \X) (= prev \C))
-             (Array.push-back! &form \V)))
-         (set! prev (Array.unsafe-last &form))))
-     form))
-
+  (hidden m)
+  (private m)
   (defn m [x j]
     (let-do [n 0 prev \X]
       (for [i 0 (+ (String.length x) j)]
@@ -41,10 +41,16 @@
           (set! prev \V)
         )) n))
 
+  (hidden m0)
+  (private m0)
   (defn m0 [x n] (> (m x n) 0))
 
+  (hidden m1)
+  (private m1)
   (defn m1 [x n] (> (m x n) 1))
 
+  (hidden contains-vowel-from?)
+  (private contains-vowel-from?)
   (defn contains-vowel-from? [x j]
     (let-do [res false]
       (for [i 0 (+ (String.length x) j)]
@@ -52,6 +58,8 @@
           (do (set! res true) (break))))
       res))
 
+  (hidden ends-with-cc?)
+  (private ends-with-cc?)
   (defn ends-with-cc? [x]
     (let [j (Int.dec (String.length x))]
       (and*
@@ -59,6 +67,8 @@
         (= (String.char-at x j) (String.char-at x (Int.dec j)))
         (consonant? x j))))
 
+  (hidden cvc?)
+  (private cvc?)
   (defn cvc? [x]
     (let [j (Int.dec (String.length x))]
       (and*
@@ -70,6 +80,8 @@
         (not (= \x (String.char-at x j)))
         (not (= \y (String.char-at x j))))))
 
+  (hidden step-1a)
+  (private step-1a)
   (defn step-1a [x]
     (cond
       (not (String.ends-with? &x "s")) x
@@ -78,6 +90,8 @@
       (not (String.ends-with? &x "ss")) (trim-from &x -1)
     x))
 
+  (hidden step-1bi)
+  (private step-1bi)
   (defn step-1bi [x]
     (cond
       (or*
@@ -95,6 +109,8 @@
         (append &x "e")
     x))
 
+  (hidden step-1b)
+  (private step-1b)
   (defn step-1b [x]
     (cond
       (String.ends-with? &x "eed")
@@ -105,11 +121,15 @@
         (step-1bi (trim-from &x -3))
     x))
 
+  (hidden step-1c)
+  (private step-1c)
   (defn step-1c [x]
     (cond (and (String.ends-with? &x "y") (contains-vowel-from? &x -1))
       (replace-from &x -1 "i")
     x))
 
+  (hidden step-2)
+  (private step-2)
   (defn step-2 [x]
     (case (String.char-at &x (- (String.length &x) 2))
       \a (cond
@@ -144,6 +164,8 @@
 
     x))
 
+  (hidden step-3)
+  (private step-3)
   (defn step-3 [x]
     (case (String.char-at &x (- (String.length &x) 1))
       \e (cond
@@ -159,6 +181,8 @@
             (String.ends-with? &x "ness") (if (m0 &x -4) (replace-from &x -4 "") x) x)
     x))
 
+  (hidden step-4)
+  (private step-4)
   (defn step-4 [x]
     (case (String.char-at &x (- (String.length &x) 2))
       \a (cond
@@ -199,6 +223,8 @@
             (String.ends-with? &x "ize") (if (m1 &x -3) (trim-from &x -3) x) x)
     x))
 
+  (hidden step-5a)
+  (private step-5a)
   (defn step-5a [x]
     (cond (String.ends-with? &x "e")
       (let [mn (m &x 0)]
@@ -208,6 +234,8 @@
         x))
     x))
 
+  (hidden step-5b)
+  (private step-5b)
   (defn step-5b [x]
     (cond
       (and*
